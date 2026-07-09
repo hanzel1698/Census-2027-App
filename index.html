@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#12355b">
+<link rel="manifest" href="manifest.webmanifest">
+<title>HLO 2027 — Enumerator App</title>
+<style>
+:root{
+  --navy:#12355b; --navy2:#1c4a7c; --saffron:#e87c1e; --saffron2:#fff3e6;
+  --green:#1e7d46; --red:#c0392b; --bg:#f2f4f7; --card:#ffffff; --ink:#1c2733;
+  --muted:#5b6b7b; --line:#dde4ec; --radius:14px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;font-size:16px;}
+button{font-family:inherit;}
+.hidden{display:none!important;}
+
+/* ---------- App bar ---------- */
+#appbar{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+#appbar .back{background:none;border:none;color:#fff;font-size:22px;padding:4px 8px;cursor:pointer;line-height:1;}
+#appbar h1{font-size:16px;margin:0;font-weight:700;flex:1;letter-spacing:.2px;}
+#appbar .sub{font-size:11px;opacity:.85;display:block;font-weight:400;}
+#ctxbar{position:sticky;top:48px;z-index:49;background:var(--navy2);color:#fff;
+  display:flex;gap:0;font-size:12px;text-align:center;}
+#ctxbar div{flex:1;padding:6px 2px;border-right:1px solid rgba(255,255,255,.15);}
+#ctxbar div:last-child{border-right:none;}
+#ctxbar b{display:block;font-size:14px;}
+#progress{height:4px;background:#0c2540;}
+#progress span{display:block;height:100%;background:var(--saffron);width:0;transition:width .25s;}
+
+main{max-width:640px;margin:0 auto;padding:14px 14px 110px;}
+
+/* ---------- Cards & typography ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(16,35,60,.06);}
+.qno{display:inline-block;background:var(--saffron);color:#fff;font-weight:800;font-size:12px;
+  padding:3px 10px;border-radius:999px;letter-spacing:.5px;}
+.qtitle{font-size:20px;font-weight:800;margin:10px 0 4px;line-height:1.25;}
+.qhint{color:var(--muted);font-size:14px;margin:0 0 12px;line-height:1.45;}
+.help-toggle{background:var(--saffron2);border:1px solid #f3d3ae;color:#9a5a10;border-radius:10px;
+  padding:8px 12px;font-size:13px;width:100%;text-align:left;cursor:pointer;margin:4px 0 10px;}
+.help-body{background:#fffaf3;border:1px solid #f3d3ae;border-top:none;border-radius:0 0 10px 10px;
+  padding:10px 12px;font-size:13px;color:#6a4a1f;line-height:1.5;margin:-10px 0 12px;}
+
+/* ---------- Options ---------- */
+.opt{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--line);
+  border-radius:12px;padding:13px 12px;margin-bottom:9px;font-size:16px;text-align:left;cursor:pointer;
+  transition:border-color .12s, background .12s;}
+.opt .code{flex:0 0 34px;height:34px;border-radius:9px;background:var(--bg);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);}
+.opt.sel{border-color:var(--saffron);background:var(--saffron2);}
+.opt.sel .code{background:var(--saffron);border-color:var(--saffron);color:#fff;}
+.optgroup{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;margin:14px 0 7px;}
+
+/* ---------- Inputs ---------- */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:2px solid var(--line);
+  border-radius:10px;font-size:17px;background:#fff;color:var(--ink);}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy2);}
+.bignum input{font-size:26px;text-align:center;font-weight:800;letter-spacing:2px;}
+.stepper{display:flex;gap:10px;align-items:stretch;}
+.stepper button{flex:0 0 64px;font-size:28px;font-weight:800;border:2px solid var(--line);
+  background:#fff;border-radius:10px;cursor:pointer;color:var(--navy);}
+.stepper input{flex:1;text-align:center;font-size:28px;font-weight:800;border:2px solid var(--line);border-radius:10px;width:60px;}
+.chk{display:flex;align-items:center;gap:10px;padding:12px;border:2px solid var(--line);
+  border-radius:10px;margin-bottom:9px;cursor:pointer;background:#fff;font-size:15px;}
+.chk input{width:22px;height:22px;accent-color:var(--saffron);}
+.chk.on{border-color:var(--saffron);background:var(--saffron2);}
+.chk[aria-disabled="true"]{opacity:.45;pointer-events:none;}
+
+/* ---------- Buttons ---------- */
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;
+  font-weight:800;cursor:pointer;margin-bottom:10px;letter-spacing:.3px;}
+.btn.primary{background:var(--navy);color:#fff;}
+.btn.accent{background:var(--saffron);color:#fff;}
+.btn.ghost{background:#fff;color:var(--navy);border:2px solid var(--line);}
+.btn.danger{background:#fff;color:var(--red);border:2px solid #eccfcb;}
+.btn.small{padding:10px;font-size:14px;width:auto;display:inline-block;margin:0;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.row{display:flex;gap:10px;}
+.row .btn{flex:1;}
+
+/* ---------- Bottom nav (wizard) ---------- */
+#wiznav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:#fff;border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;max-width:640px;margin:0 auto;}
+#wiznav button{flex:1;padding:13px 6px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;border:none;}
+#wiznav .prev{background:#fff;border:2px solid var(--line);color:var(--navy);}
+#wiznav .jump{background:#fff;border:2px solid var(--line);color:var(--saffron);flex:0 0 84px;}
+#wiznav .next{background:var(--navy);color:#fff;}
+
+/* ---------- Home ---------- */
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:var(--radius);
+  padding:18px;margin-bottom:14px;}
+.hero h2{margin:0 0 2px;font-size:18px;}
+.hero p{margin:0;font-size:13px;opacity:.85;}
+.hero .stats{display:flex;gap:8px;margin-top:14px;}
+.hero .stat{flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:9px 6px;text-align:center;}
+.hero .stat b{display:block;font-size:20px;}
+.hero .stat span{font-size:11px;opacity:.85;}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.menu button{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 12px;text-align:left;cursor:pointer;box-shadow:0 1px 3px rgba(16,35,60,.06);}
+.menu button.wide{grid-column:1/-1;background:var(--saffron);border:none;color:#fff;}
+.menu .ic{font-size:24px;display:block;margin-bottom:6px;}
+.menu b{display:block;font-size:15px;margin-bottom:2px;color:inherit;}
+.menu span{font-size:12px;color:var(--muted);}
+.menu button.wide span{color:rgba(255,255,255,.9);}
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:6px;}
+.badge.warn{background:#fdecdd;color:#b05c0a;}
+.badge.ok{background:#e2f3e9;color:var(--green);}
+
+/* ---------- Records list ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tabs button{flex:1;padding:9px 4px;border-radius:999px;border:2px solid var(--line);background:#fff;
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;}
+.tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+.rec{display:flex;align-items:center;gap:12px;}
+.rec .no{flex:0 0 46px;height:46px;border-radius:12px;background:var(--bg);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;color:var(--navy);font-size:15px;}
+.rec .no small{font-size:9px;color:var(--muted);font-weight:700;}
+.rec .info{flex:1;min-width:0;}
+.rec .info b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec .info span{font-size:12px;color:var(--muted);}
+.rec .acts{display:flex;gap:6px;}
+.rec .acts button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-size:16px;cursor:pointer;}
+
+/* ---------- Review ---------- */
+.rv{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);
+  font-size:14px;cursor:pointer;}
+.rv:last-child{border-bottom:none;}
+.rv .k{color:var(--muted);flex:1;}
+.rv .v{font-weight:700;text-align:right;max-width:55%;}
+.rv .v.miss{color:var(--red);}
+.notice{background:var(--saffron2);border:1px solid #f3d3ae;color:#8a5312;border-radius:10px;
+  padding:11px 12px;font-size:13.5px;line-height:1.45;margin-bottom:12px;}
+.notice.green{background:#e2f3e9;border-color:#bfe3cd;color:#1a5c36;}
+.notice.red{background:#fdeceb;border-color:#f0c6c2;color:#8f2b20;}
+
+/* ---------- Summary table ---------- */
+table.sum{width:100%;border-collapse:collapse;font-size:14px;}
+table.sum td{padding:8px 4px;border-bottom:1px solid var(--line);}
+table.sum td:last-child{text-align:right;font-weight:800;}
+h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:18px 2px 8px;}
+
+/* ---------- Jump sheet & modal ---------- */
+#sheet{position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:100;display:flex;align-items:flex-end;}
+#sheet .panel{background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:18px 18px 0 0;
+  padding:16px;max-height:75vh;overflow:auto;}
+.jumpgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.jumpgrid button{padding:11px 2px;border-radius:10px;border:2px solid var(--line);background:#fff;
+  font-weight:800;font-size:13px;cursor:pointer;color:var(--navy);}
+.jumpgrid button.done{background:#e2f3e9;border-color:#bfe3cd;color:var(--green);}
+.jumpgrid button.cur{background:var(--saffron);border-color:var(--saffron);color:#fff;}
+.jumpgrid button:disabled{opacity:.35;}
+
+#sig{border:2px dashed var(--line);border-radius:12px;width:100%;height:150px;touch-action:none;background:#fff;}
+.skipbar{background:#eef4fb;border:1px dashed #b9cfe6;color:var(--navy2);border-radius:10px;
+  padding:10px 12px;font-size:13.5px;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:center;gap:8px;cursor:pointer;}
+.skipbar b{white-space:nowrap;}
+footer.note{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;line-height:1.5;}
+.autofill{font-size:12px;color:var(--green);font-weight:700;margin:-6px 0 10px;}
+</style>
+</head>
+<body>
+
+<div id="appbar">
+  <button class="back hidden" id="btnBack" onclick="ui.back()">‹</button>
+  <h1 id="barTitle">Census of India 2027<span class="sub" id="barSub">Houselisting &amp; Housing Census — Enumerator App</span></h1>
+</div>
+<div id="ctxbar" class="hidden">
+  <div><small>LINE NO.</small><b id="cxLine">–</b></div>
+  <div><small>BUILDING</small><b id="cxBldg">–</b></div>
+  <div><small>CENSUS HOUSE</small><b id="cxCH">–</b></div>
+  <div><small>HOUSEHOLD</small><b id="cxHH">–</b></div>
+</div>
+<div id="progress" class="hidden"><span id="progressFill"></span></div>
+
+<main id="main"></main>
+
+<div id="wiznav" class="hidden">
+  <button class="prev" onclick="wiz.prev()">‹ PREVIOUS</button>
+  <button class="jump" onclick="wiz.jumpSheet()">JUMP</button>
+  <button class="next" onclick="wiz.next()">NEXT ›</button>
+</div>
+
+<script>
+/* =====================================================================
+   HLO 2027 — Houselisting & Housing Census, Enumerator data-collection app
+   Question codes & skip logic follow the official Instruction Manual
+   (Annexure IV code list; Chapter 5 detailed instructions).
+   All data is stored offline on this device (localStorage). Use SYNC/EXPORT.
+   ===================================================================== */
+
+/* ---------------- Question definitions (Annexure IV) ---------------- */
+const Q = {
+  q4:{no:4,title:'Predominant material of FLOOR',opts:[
+      ['1','Mud'],['2','Wood / bamboo'],['3','Burnt brick'],['4','Stone'],
+      ['5','Cement'],['6','Mosaic / floor tiles'],['7','Any other']],
+    help:'Select the material of the MAJOR portion of the floor. Granite and marble count as Stone (4). If different floors differ, take the predominant one; if each floor is a separate household, record each census house separately. Skip for locked/vacant houses.'},
+  q5:{no:5,title:'Predominant material of WALL',opts:[
+      ['1','Grass / thatch / bamboo etc.'],['2','Plastic / polythene'],['3','Mud / unburnt brick'],
+      ['4','Wood'],['5','Stone not packed with mortar'],['6','Stone packed with mortar'],
+      ['7','G.I. / metal / asbestos sheets'],['8','Burnt brick'],['9','Concrete'],['0','Any other']],
+    help:'Codes 1–5 are non-permanent, 6–9 permanent materials. If plastered/painted, ASK the respondent what is underneath (mud wall plastered with cement = code 3). Ekra = code 1. Ply/laminated boards = Wood. Cement bricks = Concrete; ash bricks = Burnt brick. Unknown & unidentifiable = 0.'},
+  q6:{no:6,title:'Predominant material of ROOF',opts:[
+      ['1','Grass / thatch / bamboo / wood / mud etc.'],['2','Plastic / polythene'],['3','Handmade tiles'],
+      ['4','Machine made tiles'],['5','Burnt brick'],['6','Stone'],['7','Slate'],
+      ['8','G.I. / metal / asbestos sheets'],['9','Concrete'],['0','Any other']],
+    help:'Take the roof of the TOP floor of this census house. Handmade (desi) tiles: penkulu, kavelu, khaprail etc. = 3. Cement tiles = Machine made tiles (4). Shingle = Slate (7). Concrete roof with temporary thatch above = Concrete (9).'},
+  q7:{no:7,title:'Ascertain USE of Census House',opts:[
+      ['1','Residence'],['2','Residence-cum-other use'],['3','Shop / office'],['4','School / college etc.'],
+      ['5','Hotel / lodge / guest house etc.'],['6','Hospital / dispensary etc.'],
+      ['7','Factory / workshop / workshed etc.'],['8','Place of worship'],
+      ['9','Other non-residential use'],['0','Vacant']],
+    help:'Code 1: fill all 34 questions. Code 2: enter actual use (e.g. "Residence-cum-grocery shop"). Codes 3–9: enter actual use; no further questions. Code 0 Vacant: type the reason (e.g. "Vacant-under repair"). LOCKED is NOT vacant — if occupants are away, tick "Is locked" and record the actual use; the app jumps to Mobile number. "Is institutional" (hostel, old age home, jail etc.) only with code 2 — only questions up to 11 are asked and household number 999 is allotted.'},
+  q8:{no:8,title:'CONDITION of this Census House',opts:[
+      ['1','Good'],['2','Livable'],['3','Dilapidated']],
+    help:'Good = needs no repairs. Livable = needs minor repairs. Dilapidated = needs major repairs / cannot be restored. Record whatever the respondent finally returns. Not asked for institutional households.'},
+  q10:{no:10,title:'Total number of persons NORMALLY residing in this household',type:'count',min:1,
+    help:'Count all normal residents of every age (including infants, elderly, disabled), even members temporarily absent today. EXCLUDE casual visitors — they are counted at their own residence.'},
+  q11:{no:11,title:'Name of the HEAD of the household',type:'text',
+    help:'The head bears chief responsibility for maintenance of the household — any gender, need not be the eldest. For INSTITUTIONAL households enter the designation instead (Hostel Warden, Manager, Jailor…).'},
+  q12:{no:12,title:'SEX of the head of household',opts:[
+      ['1','Male'],['2','Female'],['3','Transgender Person']],
+    help:'Select as returned by the respondent. Not displayed for institutional households.'},
+  q13:{no:13,title:'If SC or ST or OTHER',opts:[
+      ['1','Scheduled Caste (SC)'],['2','Scheduled Tribe (ST)'],['3','Other']],
+    help:'SC can be only from Hindus, Sikhs and Buddhists (incl. their sects); ST can be from ANY religion. Verify caste/tribe name against the State/UT list. Neither SC nor ST → 3.'},
+  q14:{no:14,title:'OWNERSHIP status of this house',opts:[
+      ['1','Owned'],['2','Rented, but has own house elsewhere'],['3','Rented, doesn’t own any house'],['4','Any other']],
+    help:'House on instalments = Owned even if instalments are pending. Rent in cash OR kind = rented (even if rent unpaid due to dispute). Employer quarters with rent = 2 or 3. Rent-free employer housing, encroached land, abandoned buildings, caves = 4.'},
+  q15:{no:15,title:'Number of DWELLING ROOMS exclusively in possession of this household',type:'count',min:0,
+    help:'A dwelling room has walls, a doorway and a roof; minimum 2m long × 1.5m wide × 2m high. Include multi-purpose living rooms; EXCLUDE kitchen, bathroom, latrine, store, passage, verandah. Rooms shared with another household count for NEITHER (enter 0 if none exclusive).'},
+  q16:{no:16,title:'Number of MARRIED COUPLE(S) living in this household',type:'count',min:0,
+    help:'Currently married couples living together, any age. A stable live-in relationship counts as a couple. Count couples where one spouse is temporarily absent. Cannot be greater than total persons (Q10) minus 1.'},
+  q17:{no:17,title:'Main source of DRINKING WATER',opts:[
+      ['1','Tap water from treated source'],['2','Tap water from un-treated source'],['3','Well'],
+      ['4','Hand pump'],['5','Tubewell / borehole'],['6','Spring'],['7','River / canal'],
+      ['8','Tank / pond / lake'],['9','Packaged / bottled water'],['0','Other sources']],
+    help:'If several sources, pick the one used for the MAJOR part of the year. Treated (1) = filtered & disinfected supply by Govt./local body/estate agency, or piped from a common RO/treatment plant. Household-level boiling/purifiers do NOT make it treated. Piped straight from well/borehole/overhead tank = 2. Tankers/carts, rain water = 0.'},
+  q18:{no:18,title:'AVAILABILITY of drinking water source',opts:[
+      ['1','Within premises'],['2','Near premises'],['3','Away']],
+    help:'"Near" = within 100 m in URBAN areas, within 500 m in RURAL areas; farther = "Away". Bottled water delivered at the doorstep = Within premises.'},
+  q19:{no:19,title:'Main source of LIGHTING',opts:[
+      ['1','Electricity'],['2','Kerosene'],['3','Solar'],['4','Other oil'],['5','Any other'],['6','No lighting']],
+    help:'Electricity counts whether the connection is legal or not. Other oil = edible/non-edible oils. Any other = candle, wood, biogas, petromax etc. Record the source used for the greater part of the last 12 months.'},
+  q20:{no:20,title:'ACCESS to latrine',opts:[
+      ['1','Yes — exclusively for household use only'],['2','Yes — shared with other household(s)'],
+      ['3','Public latrine'],['4','No — open']],
+    help:'Shared ≠ Public: a shared latrine is restricted to specific households; a public latrine (Sulabh, mobile toilet…) is open to anyone, paid or free. A latrine on a nearby plot but controlled by the household(s) counts as 1 or 2. Open fields/bush/railway tracks = 4.'},
+  q21:{no:21,title:'TYPE of latrine',groups:[
+      ['Flush / pour flush latrine connected to',[['1','Piped sewer system'],['2','Septic tank'],['3','Other system']]],
+      ['Twin pit latrine',[['4','With slab / ventilated improved pit'],['5','Without slab / open pit']]],
+      ['Single pit latrine',[['6','With slab / ventilated improved pit'],['7','Without slab / open pit']]],
+      ['Service latrine',[['8','Night soil removed by human'],['9','Night soil serviced by animals']]],
+      ['Other',[['0','Night soil disposed into open drain']]]],
+    help:'Asked only when the latrine is exclusive or shared (Q20 = 1 or 2). Flush latrine has a water-seal; pick 1/2/3 by where it drains. Pit latrines: with slab/VIP vs without slab/open pit; twin vs single pit by number of pits. Do not confuse septic tank (2) with service latrines (8/9).'},
+  q22:{no:22,title:'WASTE WATER outlet connected to',opts:[
+      ['1','Closed drainage'],['2','Open drainage'],['3','No drainage']],
+    help:'Waste water = kitchen, bath and wash water (NOT latrine waste). Unregulated flow with no drainage system = 3. Common disposal of waste + latrine water: still select the appropriate code.'},
+  q23:{no:23,title:'BATHING facility available within the premises',opts:[
+      ['1','Yes — bathroom'],['2','Yes — enclosure without roof'],['3','No']],
+    help:'What matters is availability, not the number of bathrooms. A bathroom shared by households within the premises counts as available to all of them. A combined bath-cum-latrine room means BOTH facilities are available.'},
+  q24:{no:24,title:'Availability of KITCHEN and LPG/PNG connection',groups:[
+      ['Cooking in kitchen',[['1','Has LPG/PNG connection'],['2','Doesn’t have LPG/PNG connection']]],
+      ['Cooking inside house, but not in kitchen',[['3','Has LPG/PNG connection'],['4','Doesn’t have LPG/PNG connection']]],
+      ['Cooking in open / outside house',[['5','Has LPG/PNG connection'],['6','Doesn’t have LPG/PNG connection']]],
+      ['No cooking',[['7','No cooking']]]],
+    help:'First confirm WHERE cooking is done (separate kitchen / inside without kitchen / open), then whether the household has an LPG/PNG connection. Household that does not cook at all = 7 (even if it has a kitchen). Shared kitchen: codes 1–6 apply to each household, but LPG/PNG only for the household that owns the connection.'},
+  q25:{no:25,title:'Main FUEL used for cooking',opts:[
+      ['1','Firewood'],['2','Crop residue'],['3','Cow dung cake'],['4','Coal / lignite / charcoal'],
+      ['5','Kerosene'],['6','LPG / PNG'],['7','Electricity'],['8','Bio-gas'],['9','Solar'],['0','Any other']],
+    help:'Pick the PRIMARY fuel. Independent of Q24: a household WITH an LPG connection mainly using firewood → 1; a household WITHOUT a connection cooking on mini-cylinders → 6.'},
+  q26:{no:26,title:'RADIO / transistor',opts:[
+      ['1','Yes — traditional radio set'],['2','Yes — on mobile / smartphone'],['3','Yes — on other device'],['4','No']],
+    help:'A traditional radio set/transistor → 1 irrespective of smartphones. Do NOT assume radio access just because a smartphone exists — ask. Car stereo, iPod, Carvaan player = On other device (3). Multiple devices → the one primarily used.'},
+  q27:{no:27,title:'TELEVISION',opts:[
+      ['1','Yes — Doordarshan free dish'],['2','Yes — other DTH / dish'],['3','Yes — cable connection'],
+      ['4','Yes — any other'],['5','No']],
+    help:'DD Free Dish (no subscription) = 1. Paid DTH (Tata Sky, Dish TV, Airtel…) = 2. Cable operator = 3. Any other mode = 4.'},
+  q28:{no:28,title:'Access to INTERNET',opts:[
+      ['1','Yes — on laptop / computer'],['2','Yes — on mobile / smartphone'],['3','Yes — on any other device'],['4','No']],
+    help:'Any mode counts: dial-up, DSL, cable, Wi-Fi, satellite, cellular — including public Wi-Fi. Multiple devices → the one predominantly used by the household.'},
+  q29:{no:29,title:'LAPTOP / computer',opts:[['1','Yes'],['2','No']],
+    help:'Laptop, notebook or desktop computer for use by any member. Auto-filled "Yes" when internet is accessed on laptop/computer (Q28 = 1).'},
+  q30:{no:30,title:'TELEPHONE and mobile phone / smartphone',opts:[
+      ['1','Landline only'],['2','Mobile only — smartphone'],['3','Mobile only — other basic mobile'],
+      ['4','Both landline and mobile'],['5','No']],
+    help:'Landline + any mobile = Both (4). Only mobile: smartphone → 2, basic phone → 3.'},
+  q31:{no:31,title:'BICYCLE and scooter / motorcycle / moped',opts:[
+      ['1','Bicycle only'],['2','Scooter / motorcycle / moped only'],['3','Both'],['4','None']],
+    help:'Tricycle used by a disabled person counts as bicycle. Any two-wheeled motorized vehicle counts for 2. Assets count even if used commercially.'},
+  q32:{no:32,title:'CAR / jeep / van',opts:[['1','Yes'],['2','No']],
+    help:'Includes MUV, SUV and sports car owned by any member. Counts even if used commercially.'},
+  q33:{no:33,title:'Main CEREAL consumed in the household',opts:[
+      ['1','Rice'],['2','Wheat'],['3','Jowar'],['4','Bajra'],['5','Maize'],['6','Any other']],
+    help:'Home-grown and purchased both count; cereal products too (chirwa/muri → Rice; maida/suji/dalia/biscuits → Wheat; cornflakes → Maize). Oat, barley, ragi, small millets or substitutes → 6.'},
+  q34:{no:34,title:'MOBILE NUMBER',type:'mobile',
+    help:'Enter the functional 10-digit mobile number of any one member — used ONLY for Census communication. For locked/vacant houses: enter it if a neighbour can provide one; otherwise it may be left blank.'},
+};
+
+const NONRES = ['3','4','5','6','7','8','9'];
+const USE_LABEL = Object.fromEntries(Q.q7.opts);
+
+/* ---------------- Storage ---------------- */
+const store = {
+  key:'hlo2027_v1',
+  data:null,
+  load(){ try{ this.data = JSON.parse(localStorage.getItem(this.key)) }catch(e){}
+    if(!this.data) this.data = {settings:null, records:[], hlbComplete:false, signature:null, lastSync:null};
+    return this.data; },
+  save(){ localStorage.setItem(this.key, JSON.stringify(this.data)); }
+};
+const S = store.load();
+
+/* ---------------- Record helpers ---------------- */
+function newRecord(){
+  return {id:Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    lineNo:S.records.length+1, bldg:'', ch:'', se:null, seId:'',
+    a:{}, actualUse:'', isLocked:false, isInstitutional:false,
+    hhNo:null, synced:false, editedAfterSync:false, seEdited:false,
+    createdAt:new Date().toISOString(), updatedAt:null};
+}
+function nextCH(){
+  let mx=0; S.records.forEach(r=>{const n=parseInt(r.ch,10); if(!isNaN(n)&&n>mx)mx=n;});
+  return String(mx+1).padStart(4,'0');
+}
+function assignHH(r){
+  if(r.isLocked){ r.hhNo=null; return; }
+  const use=r.a.q7;
+  if(use==='1'||use==='2'){
+    if(r.isInstitutional){ r.hhNo='999'; return; }
+    let n=0; S.records.forEach(x=>{ if(x.id!==r.id && x.bldg===r.bldg && x.ch===r.ch && x.hhNo && x.hhNo!=='999') n++; });
+    r.hhNo=String(n+1);
+  } else r.hhNo=null;
+}
+/* Sequence of question steps for a record, per manual skip rules */
+function buildSteps(r){
+  const s=['numbers','se'];
+  if(r.se==='yes') s.push('seid');
+  const vac = r.a.q7==='0';
+  if(!r.isLocked && !vac) s.push('q4','q5','q6');
+  s.push('q7');
+  const use=r.a.q7;
+  if(use===undefined||use===null||use===''){ s.push('review'); return s; }
+  if(r.isLocked || vac || NONRES.includes(use)){ s.push('q34','review'); return s; }
+  // Residence (1) or Residence-cum-other use (2)
+  if(!r.isInstitutional) s.push('q8');
+  s.push('q10','q11');
+  if(r.isInstitutional){ s.push('q34','review'); return s; }
+  s.push('q12','q13','q14','q15','q16','q17','q18','q19','q20');
+  if(r.a.q20==='1'||r.a.q20==='2') s.push('q21');
+  s.push('q22','q23','q24');
+  if(r.a.q24!=='7') s.push('q25');
+  s.push('q26','q27','q28','q29','q30','q31','q32','q33','q34','review');
+  return s;
+}
+function requiredSteps(r){
+  const steps=buildSteps(r).filter(x=>!['numbers','se','seid','review'].includes(x));
+  return steps.filter(x=>{
+    if(x==='q34') return !(r.isLocked || r.a.q7==='0' || NONRES.includes(r.a.q7)) && !r.mobileNA;
+    return true;
+  });
+}
+function missingSteps(r){
+  const m=[];
+  if(!r.bldg||!r.ch) m.push('numbers');
+  if(!r.a.q7) m.push('q7');
+  requiredSteps(r).forEach(x=>{
+    const v=r.a[x];
+    if(v===undefined||v===null||v==='') m.push(x);
+  });
+  if(['2','3','4','5','6','7','8','9','0'].includes(r.a.q7) && !r.actualUse) m.push('actualUse');
+  return m;
+}
+function isComplete(r){ return missingSteps(r).length===0; }
+function answerLabel(qid,r){
+  const v=r.a[qid]; if(v===undefined||v===null||v==='') return null;
+  const q=Q[qid];
+  if(q.opts){ const o=q.opts.find(o=>o[0]===v); return o?`${o[1]} (${o[0]})`:v; }
+  if(q.groups){ for(const [g,os] of q.groups){ const o=os.find(o=>o[0]===v); if(o) return `${g==='Other'?'':g+' — '}${o[1]} (${o[0]})`; } return v; }
+  return String(v);
+}
+
+/* ---------------- UI shell ---------------- */
+const $=s=>document.querySelector(s);
+const main=$('#main');
+const ui = {
+  stack:[],
+  show(view, push=true){
+    if(push && ui.current) ui.stack.push(ui.current);
+    ui.current=view;
+    $('#btnBack').classList.toggle('hidden', ui.stack.length===0 && view!=='entry');
+    $('#ctxbar').classList.add('hidden'); $('#progress').classList.add('hidden'); $('#wiznav').classList.add('hidden');
+    views[view]();
+    window.scrollTo(0,0);
+  },
+  back(){
+    if(ui.current==='entry'){ wiz.exit(); return; }
+    const v=ui.stack.pop()||'home'; ui.current=null; ui.show(v,false);
+  },
+  title(t,sub){ $('#barTitle').innerHTML = t + (sub?`<span class="sub">${sub}</span>`:''); },
+  toast(msg){ const t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1c2733;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:200;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:90%;text-align:center';
+    t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+};
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------- Views ---------------- */
+const views = {};
+
+/* ---- Setup / location particulars ---- */
+views.setup = function(){
+  ui.title('Location Particulars','Verify against your Appointment Letter');
+  const st=S.settings||{};
+  const f=(id,label,val,ph,type)=>`<div class="field"><label>${label}</label>
+    <input id="${id}" type="${type||'text'}" value="${esc(val||'')}" placeholder="${ph||''}"></div>`;
+  main.innerHTML=`
+  <div class="card">
+    <div class="notice">Ascertain that these particulars are the <b>same as in your Appointment Letter</b> before starting fieldwork (manual §5.2).</div>
+    ${f('sState','State / UT',st.state,'e.g. Maharashtra')}
+    ${f('sDistrict','District',st.district)}
+    ${f('sSub','Sub-district / Tehsil / Taluk',st.sub)}
+    ${f('sVill','Village / Town',st.vill)}
+    ${f('sWard','Ward No. (urban)',st.ward)}
+    ${f('sHLB','Houselisting Block (HLB) No.',st.hlb)}
+    <div class="field"><label>Area type (decides the 100 m / 500 m drinking-water distance rule)</label>
+      <select id="sArea"><option value="rural"${st.area!=='urban'?' selected':''}>Rural</option>
+      <option value="urban"${st.area==='urban'?' selected':''}>Urban</option></select></div>
+    ${f('sEnum','Enumerator name',st.enumName)}
+    ${f('sEnumId','Enumerator ID',st.enumId)}
+    <div class="row">
+      <div class="field" style="flex:1"><label>Expected buildings (layout map)</label><input id="sExpB" type="number" inputmode="numeric" value="${esc(st.expB||'')}"></div>
+      <div class="field" style="flex:1"><label>Expected census houses</label><input id="sExpH" type="number" inputmode="numeric" value="${esc(st.expH||'')}"></div>
+    </div>
+    <button class="btn primary" onclick="saveSetup()">SAVE &amp; CONTINUE</button>
+  </div>`;
+};
+function saveSetup(){
+  S.settings={state:$('#sState').value.trim(),district:$('#sDistrict').value.trim(),sub:$('#sSub').value.trim(),
+    vill:$('#sVill').value.trim(),ward:$('#sWard').value.trim(),hlb:$('#sHLB').value.trim(),
+    area:$('#sArea').value,enumName:$('#sEnum').value.trim(),enumId:$('#sEnumId').value.trim(),
+    expB:$('#sExpB').value,expH:$('#sExpH').value};
+  store.save(); ui.stack=[]; ui.show('home',false);
+}
+
+/* ---- Home ---- */
+views.home = function(){
+  ui.title('Census of India 2027','Houselisting &amp; Housing Census — HLO App');
+  const st=S.settings||{}; const recs=S.records;
+  const complete=recs.filter(isComplete), incomplete=recs.filter(r=>!isComplete(r));
+  const unsynced=recs.filter(r=>!r.synced&&isComplete(r));
+  const hh=recs.filter(r=>r.hhNo).length;
+  const pop=recs.reduce((s,r)=>s+(parseInt(r.a.q10,10)||0),0);
+  const chSet=new Set(recs.map(r=>r.bldg+'/'+r.ch));
+  main.innerHTML=`
+  <div class="hero">
+    <h2>${esc(st.vill||'Your Block')} — HLB ${esc(st.hlb||'—')}</h2>
+    <p>${esc([st.sub,st.district,st.state].filter(Boolean).join(', '))||'Set location particulars'} · ${st.area==='urban'?'Urban':'Rural'}</p>
+    <div class="stats">
+      <div class="stat"><b>${chSet.size}</b><span>Census houses${st.expH?' / '+esc(st.expH):''}</span></div>
+      <div class="stat"><b>${hh}</b><span>Households</span></div>
+      <div class="stat"><b>${pop}</b><span>Persons</span></div>
+      <div class="stat"><b>${unsynced.length}</b><span>Unsynced</span></div>
+    </div>
+  </div>
+  ${S.hlbComplete?'<div class="notice green"><b>HLB marked as COMPLETE.</b> New entry is locked. Reopen from "Mark as Complete" if correction is needed.</div>':''}
+  <div class="menu">
+    <button class="wide" onclick="wiz.start()" ${S.hlbComplete?'disabled':''}><span class="ic">📝</span><b>HOUSELIST ENTRY</b><span>Start entry for a new census house / household</span></button>
+    <button onclick="ui.show('records')"><span class="ic">📋</span><b>Updation Data</b><span>Edit / delete unsynced records ${incomplete.length?`<span class="badge warn">${incomplete.length} incomplete</span>`:''}</span></button>
+    <button onclick="ui.show('synced')"><span class="ic">🔁</span><b>Edit Synced Data</b><span>Correct already-synced records</span></button>
+    <button onclick="ui.show('summary')"><span class="ic">📊</span><b>View Summary</b><span>Progress of filled-in census houses</span></button>
+    <button onclick="doSync()"><span class="ic">☁️</span><b>Sync</b><span>${unsynced.length? unsynced.length+' record(s) ready':'All synced'}${S.lastSync?'<br>Last: '+new Date(S.lastSync).toLocaleString():''}</span></button>
+    <button onclick="ui.show('complete')"><span class="ic">✅</span><b>Mark as Complete</b><span>Finalize this HLB ${S.hlbComplete?'<span class="badge ok">DONE</span>':''}</span></button>
+    <button onclick="ui.show('export')"><span class="ic">📤</span><b>Export / Backup</b><span>CSV · JSON backup &amp; restore</span></button>
+  </div>
+  <div style="margin-top:12px"><button class="btn ghost" onclick="ui.show('setup')">⚙️ Location particulars &amp; settings</button></div>
+  <footer class="note">Question codes &amp; skip rules as per the official Instruction Manual for Houselisting and Housing Census (Annexure IV).<br>
+  Golden Rule: Ask → Verify → Record → Review → Sync → Mark Complete.<br>All data stays on this device until you sync/export.</footer>`;
+};
+
+/* ---- Records lists ---- */
+function recRow(r, syncedView){
+  const comp=isComplete(r);
+  const label = r.a.q7 ? (USE_LABEL[r.a.q7]||'') : 'Not classified yet';
+  const name = r.a.q11 ? ' · '+r.a.q11 : '';
+  const tags = [r.isLocked?'LOCKED':'', r.isInstitutional?'INSTITUTIONAL':'', r.seEdited?'SE-EDITED':'', r.editedAfterSync?'RE-EDITED':''].filter(Boolean).join(' · ');
+  return `<div class="card rec">
+    <div class="no"><small>LINE</small>${r.lineNo}</div>
+    <div class="info"><b>B ${esc(r.bldg||'—')} · CH ${esc(r.ch||'—')}${r.hhNo?' · HH '+r.hhNo:''}</b>
+      <span>${esc(label)}${esc(name)}${tags?' · '+tags:''}</span><br>
+      <span>${comp?'<span class="badge ok">Complete</span>':'<span class="badge warn">Incomplete</span>'} ${r.synced?'<span class="badge ok">Synced</span>':''}</span></div>
+    <div class="acts">
+      <button title="Edit" onclick="editRecord('${r.id}')">✏️</button>
+      ${!r.synced?`<button title="Delete" onclick="delRecord('${r.id}')">🗑️</button>`:''}
+    </div></div>`;
+}
+views.records = function(){
+  ui.title('Updation Data','Unsynced records — edit or delete');
+  const recs=S.records.filter(r=>!r.synced);
+  const inc=recs.filter(r=>!isComplete(r)), comp=recs.filter(isComplete);
+  main.innerHTML = (recs.length===0?'<div class="card">No unsynced records. Use HOUSELIST ENTRY to add one.</div>':
+    (inc.length?`<h3 class="sec">Incomplete (${inc.length})</h3>`+inc.map(r=>recRow(r)).join(''):'')+
+    (comp.length?`<h3 class="sec">Complete (${comp.length})</h3>`+comp.map(r=>recRow(r)).join(''):''));
+};
+views.synced = function(){
+  ui.title('Edit Already Synced Data','Corrections are tagged for Supervisor review');
+  const recs=S.records.filter(r=>r.synced);
+  main.innerHTML = recs.length===0?'<div class="card">No synced records yet. Use SYNC on the home screen after completing records.</div>':
+    '<div class="notice">Editing a synced record tags it for re-sync and Supervisor review.</div>'+recs.map(r=>recRow(r,true)).join('');
+};
+function editRecord(id){
+  const r=S.records.find(x=>x.id===id); if(!r) return;
+  if(S.hlbComplete){ ui.toast('HLB is marked complete — reopen it first.'); return; }
+  wiz.open(r);
+}
+function delRecord(id){
+  const r=S.records.find(x=>x.id===id); if(!r) return;
+  if(!confirm(`Delete Line ${r.lineNo} (Building ${r.bldg}, CH ${r.ch})? This cannot be undone.`)) return;
+  S.records=S.records.filter(x=>x.id!==id);
+  S.records.forEach((x,i)=>x.lineNo=i+1); // keep line numbers a running serial
+  store.save(); views[ui.current]();
+  ui.toast('Record deleted. Line numbers re-serialised.');
+}
+
+/* ---- Summary ---- */
+views.summary = function(){
+  ui.title('View Summary','Filled-in census houses of this HLB');
+  const recs=S.records; const st=S.settings||{};
+  const byUse={}; Q.q7.opts.forEach(([c,l])=>byUse[c]=0);
+  let locked=0, inst=0, hh=0, pop=0, couples=0, rooms=0, se=0;
+  recs.forEach(r=>{ if(r.a.q7!==undefined&&r.a.q7!=='')byUse[r.a.q7]=(byUse[r.a.q7]||0)+1;
+    if(r.isLocked)locked++; if(r.isInstitutional)inst++;
+    if(r.hhNo)hh++; pop+=parseInt(r.a.q10,10)||0; couples+=parseInt(r.a.q16,10)||0; rooms+=parseInt(r.a.q15,10)||0;
+    if(r.se==='yes')se++;});
+  const comp=recs.filter(isComplete).length;
+  const bSet=new Set(recs.map(r=>r.bldg).filter(Boolean));
+  const chSet=new Set(recs.map(r=>r.bldg+'/'+r.ch).filter(x=>x!=='/'));
+  const row=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  main.innerHTML=`
+  <div class="card"><h3 class="sec" style="margin-top:0">Progress</h3><table class="sum">
+    ${row('Records (lines)',recs.length)}
+    ${row('Complete / Incomplete',`${comp} / ${recs.length-comp}`)}
+    ${row('Synced',recs.filter(r=>r.synced).length)}
+    ${row('Buildings listed'+(st.expB?' (expected '+esc(st.expB)+')':''),bSet.size)}
+    ${row('Census houses listed'+(st.expH?' (expected '+esc(st.expH)+')':''),chSet.size)}
+  </table></div>
+  <div class="card"><h3 class="sec" style="margin-top:0">Use of census houses (Q7)</h3><table class="sum">
+    ${Q.q7.opts.map(([c,l])=>row(`${l} (${c})`,byUse[c]||0)).join('')}
+    ${row('Locked houses',locked)}${row('Institutional households',inst)}
+  </table></div>
+  <div class="card"><h3 class="sec" style="margin-top:0">Households</h3><table class="sum">
+    ${row('Households numbered',hh)}
+    ${row('Population (Σ Q10)',pop)}
+    ${row('Married couples (Σ Q16)',couples)}
+    ${row('Dwelling rooms (Σ Q15)',rooms)}
+    ${row('Self-Enumeration households',se)}
+  </table></div>`;
+};
+
+/* ---- Sync (offline-first: flags records; data leaves device via export) ---- */
+function doSync(){
+  const ready=S.records.filter(r=>!r.synced&&isComplete(r));
+  const pendingIncomplete=S.records.filter(r=>!r.synced&&!isComplete(r)).length;
+  if(ready.length===0){ ui.toast(pendingIncomplete?`Nothing ready — ${pendingIncomplete} record(s) still incomplete.`:'All records already synced.'); return; }
+  if(!confirm(`Sync ${ready.length} completed record(s)?\n(They will be locked against deletion; further edits go through "Edit Already Synced Data".)`)) return;
+  ready.forEach(r=>{r.synced=true; r.editedAfterSync=false; r.syncedAt=new Date().toISOString();});
+  S.lastSync=new Date().toISOString(); store.save(); views.home();
+  ui.toast(`${ready.length} record(s) marked synced. Use Export to hand over data.`);
+}
+
+/* ---- Mark as Complete (with signature, per manual §5.1.93-94) ---- */
+views.complete = function(){
+  ui.title('Mark as Complete','Finalize and lock this HLB');
+  const recs=S.records, inc=recs.filter(r=>!isComplete(r)), unsynced=recs.filter(r=>!r.synced);
+  if(S.hlbComplete){
+    main.innerHTML=`<div class="card"><div class="notice green"><b>This HLB is marked COMPLETE.</b><br>Completed on ${new Date(S.completedAt).toLocaleString()} with ${recs.length} records.</div>
+      ${S.signature?`<img src="${S.signature}" style="max-width:100%;border:1px solid var(--line);border-radius:10px" alt="signature">`:''}
+      <button class="btn danger" onclick="if(confirm('Reopen this HLB for corrections?')){S.hlbComplete=false;store.save();ui.show('home',false);}">REOPEN HLB FOR CORRECTION</button></div>`;
+    return;
+  }
+  main.innerHTML=`<div class="card">
+    ${inc.length?`<div class="notice red"><b>${inc.length} record(s) are incomplete.</b> Complete them in Updation Data before marking the HLB complete.</div>`:''}
+    ${!inc.length&&unsynced.length?`<div class="notice"><b>${unsynced.length} record(s) not yet synced.</b> They will be synced together on save.</div>`:''}
+    ${recs.length===0?'<div class="notice red">No records entered yet.</div>':''}
+    <label class="chk" id="chkDone"><input type="checkbox" id="cbDone"> I confirm that data collection of the entire HLB is completed, reviewed, and no further editing is required.</label>
+    <div class="field"><label>Sign with your finger in the space below</label><canvas id="sig" width="600" height="150"></canvas></div>
+    <div class="row"><button class="btn ghost" onclick="sigClear()">CLEAR</button>
+    <button class="btn accent" onclick="finalizeHLB()" ${inc.length||recs.length===0?'disabled':''}>SAVE &amp; SYNC</button></div>
+  </div>`;
+  sigInit();
+};
+let sigCtx, sigDrawn=false;
+function sigInit(){
+  const c=$('#sig'); if(!c) return; sigCtx=c.getContext('2d'); sigCtx.lineWidth=2.4; sigCtx.lineCap='round'; sigCtx.strokeStyle='#12355b';
+  let draw=false;
+  const pos=e=>{const r=c.getBoundingClientRect();const t=e.touches?e.touches[0]:e;
+    return [(t.clientX-r.left)*c.width/r.width,(t.clientY-r.top)*c.height/r.height];};
+  const dn=e=>{draw=true;sigDrawn=true;const[x,y]=pos(e);sigCtx.beginPath();sigCtx.moveTo(x,y);e.preventDefault();};
+  const mv=e=>{if(!draw)return;const[x,y]=pos(e);sigCtx.lineTo(x,y);sigCtx.stroke();e.preventDefault();};
+  const up=()=>draw=false;
+  c.addEventListener('mousedown',dn);c.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+  c.addEventListener('touchstart',dn,{passive:false});c.addEventListener('touchmove',mv,{passive:false});c.addEventListener('touchend',up);
+}
+function sigClear(){ const c=$('#sig'); sigCtx.clearRect(0,0,c.width,c.height); sigDrawn=false; }
+function finalizeHLB(){
+  if(!$('#cbDone').checked){ ui.toast('Tick the confirmation checkbox first.'); return; }
+  if(!sigDrawn){ ui.toast('Please sign in the signature box.'); return; }
+  S.records.forEach(r=>{ if(!r.synced&&isComplete(r)){r.synced=true;r.syncedAt=new Date().toISOString();} });
+  S.signature=$('#sig').toDataURL('image/png');
+  S.hlbComplete=true; S.completedAt=new Date().toISOString(); S.lastSync=new Date().toISOString();
+  store.save(); ui.show('home',false); ui.toast('HLB marked as complete. 🎉');
+}
+
+/* ---- Export / backup ---- */
+views.export = function(){
+  ui.title('Export / Backup','Hand over or safeguard your data');
+  main.innerHTML=`<div class="card">
+    <button class="btn primary" onclick="exportCSV()">⬇️ EXPORT CSV (all 34 questions)</button>
+    <button class="btn ghost" onclick="exportJSON()">⬇️ BACKUP JSON (full app data)</button>
+    <div class="field" style="margin-top:14px"><label>Restore from JSON backup</label>
+      <input type="file" id="restoreFile" accept=".json,application/json"></div>
+    <button class="btn danger" onclick="restoreJSON()">RESTORE (replaces current data)</button>
+  </div>
+  <footer class="note">CSV columns follow the schedule order: location particulars, Q1–Q34, flags and sync status.</footer>`;
+};
+function dl(name, text, type){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function exportCSV(){
+  const st=S.settings||{};
+  const head=['State','District','Sub-district','Village/Town','Ward','HLB','Enumerator','EnumeratorID',
+    'Q1_Line','Q2_Building','Q3_CensusHouse','SE_Status','SE_ID','Q4_Floor','Q5_Wall','Q6_Roof',
+    'Q7_Use','ActualUse','IsLocked','IsInstitutional','Q8_Condition','Q9_HouseholdNo','Q10_Persons',
+    'Q11_HeadName','Q12_Sex','Q13_SC_ST','Q14_Ownership','Q15_Rooms','Q16_Couples','Q17_Water',
+    'Q18_WaterAvail','Q19_Lighting','Q20_Latrine','Q21_LatrineType','Q22_WasteWater','Q23_Bathing',
+    'Q24_Kitchen','Q25_Fuel','Q26_Radio','Q27_TV','Q28_Internet','Q29_Laptop','Q30_Phone',
+    'Q31_TwoWheeler','Q32_Car','Q33_Cereal','Q34_Mobile','MobileNA','Status','Synced','CreatedAt','UpdatedAt'];
+  const cell=v=>{v=v===undefined||v===null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const rows=S.records.map(r=>[st.state,st.district,st.sub,st.vill,st.ward,st.hlb,st.enumName,st.enumId,
+    r.lineNo,r.bldg,r.ch,r.se||'',r.seId||'',r.a.q4,r.a.q5,r.a.q6,r.a.q7,r.actualUse,r.isLocked?1:0,
+    r.isInstitutional?1:0,r.a.q8,r.hhNo||'',r.a.q10,r.a.q11,r.a.q12,r.a.q13,r.a.q14,r.a.q15,r.a.q16,
+    r.a.q17,r.a.q18,r.a.q19,r.a.q20,r.a.q21,r.a.q22,r.a.q23,r.a.q24,r.a.q25,r.a.q26,r.a.q27,r.a.q28,
+    r.a.q29,r.a.q30,r.a.q31,r.a.q32,r.a.q33,r.a.q34,r.mobileNA?1:0,isComplete(r)?'COMPLETE':'INCOMPLETE',
+    r.synced?1:0,r.createdAt,r.updatedAt].map(cell).join(','));
+  dl(`HLO_${(st.hlb||'block')}_${new Date().toISOString().slice(0,10)}.csv`,[head.join(','),...rows].join('\n'),'text/csv');
+  ui.toast('CSV exported.');
+}
+function exportJSON(){ dl(`HLO_backup_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(S,null,1),'application/json'); ui.toast('Backup exported.'); }
+function restoreJSON(){
+  const f=$('#restoreFile').files[0]; if(!f){ ui.toast('Choose a backup file first.'); return; }
+  if(!confirm('Replace ALL current data with this backup?')) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
+      if(!d||!Array.isArray(d.records)) throw 0;
+      store.data=d; Object.assign(S,d); S.records=d.records; store.save(); location.reload();
+    }catch(e){ ui.toast('Invalid backup file.'); } };
+  rd.readAsText(f);
+}
+
+/* =====================================================================
+   ENTRY WIZARD
+   ===================================================================== */
+const wiz = {
+  r:null, step:'numbers', fromReview:false,
+  start(){
+    if(!S.settings){ ui.toast('Fill location particulars first.'); ui.show('setup'); return; }
+    this.open(newRecord(), true);
+  },
+  open(rec, isNew=false){
+    this.r=rec; this.isNew=isNew; this.fromReview=false;
+    this.step = isNew ? 'numbers' : 'review';
+    ui.current='entry'; views.entry();
+  },
+  exit(){
+    if(this.dirty && !confirm('Leave this record? Answered questions are kept as an incomplete record.')) return;
+    if(this.isNew && this.dirty){ if(!S.records.find(x=>x.id===this.r.id)) S.records.push(this.r); store.save(); }
+    this.dirty=false; ui.stack=[]; ui.show('home',false);
+  },
+  steps(){ return buildSteps(this.r); },
+  goto(step){ this.step=step; views.entry(); },
+  next(){
+    const err=this.validate(this.step);
+    if(err){ ui.toast(err); return; }
+    this.persistDraft();
+    if(this.fromReview && this.step!=='review'){ this.fromReview=false; this.goto('review'); return; }
+    const st=this.steps(); let i=st.indexOf(this.step);
+    if(i<0){ this.goto(st[st.length-1]); return; }
+    if(this.step==='review'){ this.submit(); return; }
+    // skip q4-6 if they were auto-filled from a sibling household? keep visible (fast confirm)
+    this.goto(st[Math.min(i+1,st.length-1)]);
+  },
+  prev(){
+    const st=this.steps(); let i=st.indexOf(this.step);
+    if(i>0) this.goto(st[i-1]);
+  },
+  persistDraft(){
+    this.dirty=true;
+    if(!S.records.find(x=>x.id===this.r.id)) S.records.push(this.r);
+    this.r.updatedAt=new Date().toISOString();
+    if(this.r.synced) this.r.editedAfterSync=true;
+    assignHH(this.r);
+    store.save();
+  },
+  validate(step){
+    const r=this.r;
+    if(step==='numbers'){
+      if(!$('#inBldg').value.trim()) return 'Enter the Building number (as marked on the building).';
+      r.bldg=$('#inBldg').value.trim().toUpperCase();
+      r.ch=$('#inCH').value.trim()||r.ch;
+      if(!r.ch) return 'Census House number missing.';
+    }
+    if(step==='se' && !r.se) return 'Record whether the household has completed Self-Enumeration.';
+    if(step==='q7'){
+      if(!r.a.q7) return 'Select the use of this census house.';
+      if(r.a.q7!=='1' && !r.actualUse.trim()) return r.a.q7==='0'?'Type the reason of vacancy (e.g. "Vacant-under repair").':'Type the actual use (e.g. "Residence-cum-grocery shop").';
+    }
+    if(step==='q10'){ const v=parseInt(r.a.q10,10); if(!(v>=1)) return 'Total persons must be at least 1.'; }
+    if(step==='q11' && !(r.a.q11||'').trim()) return r.isInstitutional?'Enter the designation of the head (e.g. Hostel Warden).':'Enter the name of the head of household.';
+    if(step==='q15'){ const v=parseInt(r.a.q15,10); if(!(v>=0)) return 'Enter the number of dwelling rooms (0 or more).'; }
+    if(step==='q16'){ const v=parseInt(r.a.q16,10), p=parseInt(r.a.q10,10)||0;
+      if(!(v>=0)) return 'Enter the number of married couples (0 or more).';
+      if(v>Math.max(p-1,0)) return `Married couples cannot exceed total persons (${p}) minus 1.`; }
+    if(step==='q34'){
+      const optional = r.isLocked || r.a.q7==='0' || NONRES.includes(r.a.q7);
+      const v=(r.a.q34||'').trim();
+      if(v && !/^[6-9]\d{9}$/.test(v)) return 'Mobile number must be 10 digits (starting 6–9).';
+      if(!v && !optional && !r.mobileNA) return 'Enter a 10-digit mobile number, or tick "Number not available".';
+    }
+    if(Q[step] && (Q[step].opts||Q[step].groups) && !r.a[step]) return 'Select an option to continue.';
+    return null;
+  },
+  submit(){
+    const r=this.r; assignHH(r);
+    r.updatedAt=new Date().toISOString();
+    if(!S.records.find(x=>x.id===r.id)) S.records.push(r);
+    if(r.synced) r.editedAfterSync=true;
+    store.save(); this.dirty=false;
+    const comp=isComplete(r);
+    views.entryDone(comp);
+  },
+  /* set an answer and auto-advance */
+  setOpt(qid,code){
+    this.r.a[qid]=code;
+    if(qid==='q7'){
+      if(code!=='2') this.r.isInstitutional=false;
+      if(code==='1') this.r.actualUse='';
+      views.entry(); return; // stay to fill actual use / checkboxes
+    }
+    if(qid==='q28' && code==='1') this.r.a.q29='1'; // auto-fill laptop=Yes (manual §5.1.84)
+    this.persistDraft();
+    document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel'));
+    const el=document.getElementById('opt-'+qid+'-'+code); if(el)el.classList.add('sel');
+    setTimeout(()=>this.next(),240);
+  },
+  jumpSheet(){
+    const st=this.steps().filter(s=>s!=='review');
+    const label=s=>s==='numbers'?'Q2·3':s==='se'?'SE':s==='seid'?'SE ID':'Q'+Q[s].no;
+    const done=s=>{ if(s==='numbers')return this.r.bldg&&this.r.ch; if(s==='se')return !!this.r.se;
+      if(s==='seid')return !!this.r.seId; const v=this.r.a[s]; return v!==undefined&&v!==null&&v!==''; };
+    const div=document.createElement('div'); div.id='sheet';
+    div.innerHTML=`<div class="panel"><h3 style="margin:0 0 12px">Jump to question</h3>
+      <div class="jumpgrid">${st.map(s=>`<button class="${done(s)?'done':''} ${s===this.step?'cur':''}" onclick="wiz.jumpTo('${s}')">${label(s)}</button>`).join('')}
+      <button class="cur" style="background:var(--navy);border-color:var(--navy)" onclick="wiz.jumpTo('review')">REVIEW</button></div>
+      <button class="btn ghost" style="margin-top:14px" onclick="document.getElementById('sheet').remove()">Close</button></div>`;
+    div.addEventListener('click',e=>{ if(e.target===div) div.remove(); });
+    document.body.appendChild(div);
+  },
+  jumpTo(s){ const el=document.getElementById('sheet'); if(el)el.remove(); this.goto(s); },
+};
+
+/* ---- Wizard rendering ---- */
+views.entry = function(){
+  const r=wiz.r, step=wiz.step, st=wiz.steps();
+  ui.title('Houselist Entry', esc((S.settings&&S.settings.hlb)?('HLB '+S.settings.hlb):''));
+  $('#ctxbar').classList.remove('hidden');
+  $('#cxLine').textContent=r.lineNo;
+  $('#cxBldg').textContent=r.bldg||'–';
+  $('#cxCH').textContent=r.ch||'–';
+  $('#cxHH').textContent=r.hhNo||(r.isInstitutional?'999':'–');
+  $('#progress').classList.remove('hidden');
+  const i=Math.max(st.indexOf(step),0);
+  $('#progressFill').style.width=Math.round((i)/(st.length-1)*100)+'%';
+  $('#wiznav').classList.remove('hidden');
+  $('#btnBack').classList.remove('hidden');
+
+  if(step==='numbers') return renderNumbers(r);
+  if(step==='se') return renderSE(r);
+  if(step==='seid') return renderSEID(r);
+  if(step==='review') return renderReview(r);
+  renderQuestion(r,step);
+};
+
+function helpBlock(qid){
+  const q=Q[qid]; if(!q.help) return '';
+  return `<button class="help-toggle" onclick="const b=document.getElementById('hb-${qid}');b.classList.toggle('hidden');">ⓘ Manual guidance — tap to show/hide</button>
+  <div class="help-body hidden" id="hb-${qid}">${q.help}</div>`;
+}
+function skipToQ7(){
+  return `<div class="skipbar" onclick="wiz.goto('q7')"><span>House found <b>locked</b> or <b>vacant</b>? Floor/wall/roof are skipped for such houses.</span><b>Skip to Q7 ›</b></div>`;
+}
+
+function renderNumbers(r){
+  const prevB=[...new Set(S.records.filter(x=>x.id!==r.id).map(x=>x.bldg).filter(Boolean))];
+  const lastB=prevB[prevB.length-1];
+  if(!r.ch) r.ch=nextCH();
+  const sameCH = lastB!==undefined;
+  main.innerHTML=`<div class="card">
+    <span class="qno">Q2 · Q3</span>
+    <div class="qtitle">Building &amp; Census House number</div>
+    <p class="qhint">Copy the Building number as already marked on the building/main gate. The Census House number is auto-generated — write it with marker at the entrance of the census house (§5.1.2).</p>
+    <div class="field bignum"><label>Q2 — Building number</label>
+      <input id="inBldg" value="${esc(r.bldg)}" maxlength="8" autocomplete="off" placeholder="e.g. 0012">
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn ghost" ${sameCH?'':'disabled'} onclick="$('#inBldg').value='${esc(lastB||'')}'">REPEAT last (${esc(lastB||'—')})</button>
+      <button class="btn ghost" onclick="$('#inBldg').value='';$('#inBldg').focus()">NEW</button>
+    </div>
+    ${prevB.length?`<div class="field"><label>…or pick a previously listed building</label>
+      <select onchange="if(this.value)$('#inBldg').value=this.value"><option value="">Select building no.</option>
+      ${prevB.map(b=>`<option>${esc(b)}</option>`).join('')}</select></div>`:''}
+    <div class="field bignum"><label>Q3 — Census House number (auto)</label>
+      <input id="inCH" value="${esc(r.ch)}" maxlength="4" inputmode="numeric"></div>
+    <div class="row">
+      <button class="btn ghost" ${S.records.filter(x=>x.id!==r.id).length?'':'disabled'} onclick="repeatCH()">REPEAT (another household, same census house)</button>
+      <button class="btn ghost" onclick="$('#inCH').value='${esc(nextCH())}'">NEW</button>
+    </div>
+    <p class="qhint" style="margin-top:10px">Line number <b>${r.lineNo}</b> is auto-incremented (Q1).</p>
+  </div>`;
+}
+function repeatCH(){
+  const others=S.records.filter(x=>x.id!==wiz.r.id);
+  const last=others[others.length-1];
+  if(!last){ ui.toast('No previous census house to repeat.'); return; }
+  $('#inCH').value=last.ch; if(!$('#inBldg').value)$('#inBldg').value=last.bldg;
+  // auto-fetch floor/wall/roof from first household of this census house (§5.1.8)
+  const first=others.find(x=>x.ch===last.ch&&x.bldg===(last.bldg));
+  if(first){ ['q4','q5','q6'].forEach(k=>{ if(first.a[k]!==undefined) wiz.r.a[k]=first.a[k]; }); wiz.r._autofilled=true; }
+  ui.toast('Census house repeated — floor/wall/roof auto-fetched.');
+}
+
+function renderSE(r){
+  main.innerHTML=`<div class="card">
+    <span class="qno">SELF-ENUMERATION</span>
+    <div class="qtitle">Has this household completed Self-Enumeration?</div>
+    <p class="qhint">Households could self-enumerate on the web portal. If yes, verify their SE data with the SE ID (§5.1.4).</p>
+    <button class="opt ${r.se==='yes'?'sel':''}" onclick="wiz.r.se='yes';wiz.persistDraft();wiz.next()"><span class="code">Y</span> Yes — household has an SE ID</button>
+    <button class="opt ${r.se==='no'?'sel':''}" onclick="wiz.r.se='no';wiz.r.seId='';wiz.persistDraft();wiz.next()"><span class="code">N</span> No — enumerate normally</button>
+  </div>`;
+}
+function renderSEID(r){
+  main.innerHTML=`<div class="card">
+    <span class="qno">SE ID</span>
+    <div class="qtitle">Enter the Self-Enumeration ID</div>
+    <p class="qhint">If the SE ID matches one imported in your app, review the household's data and Accept or Edit it. Edited SE records are tagged for Supervisor review (§5.1.5–5.1.7).</p>
+    <div class="field bignum"><input id="inSEID" value="${esc(r.seId)}" placeholder="SE ID" autocomplete="off"></div>
+    <div class="notice">No SE data is imported on this device, so after entering the ID continue with the usual question-by-question enumeration from Q4 (§5.1.6). The record is tagged <b>SE-verified</b> in the export.</div>
+    <button class="btn primary" onclick="wiz.r.seId=$('#inSEID').value.trim();wiz.r.seEdited=true;wiz.persistDraft();wiz.next()">CONTINUE ENUMERATION</button>
+  </div>`;
+}
+
+function renderQuestion(r,qid){
+  const q=Q[qid];
+  let body='';
+  if(q.opts||q.groups){
+    const opt=([c,l])=>`<button class="opt ${r.a[qid]===c?'sel':''}" id="opt-${qid}-${c}" onclick="wiz.setOpt('${qid}','${c}')"><span class="code">${c}</span> ${l}</button>`;
+    if(q.opts) body=q.opts.map(opt).join('');
+    else body=q.groups.map(([g,os])=>`<div class="optgroup">${g}</div>`+os.map(opt).join('')).join('');
+  }
+  else if(q.type==='count'){
+    const v=r.a[qid]??'';
+    body=`<div class="stepper">
+      <button onclick="stepCount('${qid}',-1)">−</button>
+      <input id="in-${qid}" type="number" inputmode="numeric" min="${q.min}" value="${esc(v)}"
+        oninput="wiz.r.a['${qid}']=this.value">
+      <button onclick="stepCount('${qid}',1)">+</button></div>`;
+  }
+  else if(q.type==='text'){
+    body=`<div class="field"><input id="in-${qid}" value="${esc(r.a[qid]||'')}" autocomplete="off"
+      placeholder="${r.isInstitutional?'Designation (e.g. Hostel Warden)':'Full name'}"
+      oninput="wiz.r.a['${qid}']=this.value"></div>`;
+  }
+  else if(q.type==='mobile'){
+    const optional = r.isLocked || r.a.q7==='0' || NONRES.includes(r.a.q7);
+    body=`<div class="field bignum"><input id="in-${qid}" type="tel" inputmode="numeric" maxlength="10"
+      value="${esc(r.a[qid]||'')}" placeholder="10-digit mobile" oninput="wiz.r.a['${qid}']=this.value.replace(/\\D/g,'')"></div>
+      ${optional?'<div class="notice">Locked / vacant / non-residential: enter only if a neighbour can provide a number; otherwise leave blank and press NEXT.</div>':
+      `<label class="chk ${r.mobileNA?'on':''}" onclick="wiz.r.mobileNA=!wiz.r.mobileNA;wiz.persistDraft();views.entry()">
+        <input type="checkbox" ${r.mobileNA?'checked':''} onclick="event.stopPropagation()"> Number not available / respondent declined</label>`}`;
+  }
+
+  let extra='';
+  if(['q4','q5','q6'].includes(qid) && !r.isLocked && r.a.q7!=='0')
+    extra = skipToQ7() + (r._autofilled?'<div class="autofill">✓ Auto-fetched from the first household of this census house — confirm or change.</div>':'');
+  if(qid==='q7') extra='';
+  if(qid==='q18'){ const urban=(S.settings&&S.settings.area)==='urban';
+    extra=`<div class="notice">This is a <b>${urban?'URBAN':'RURAL'}</b> block: "Near premises" = within <b>${urban?'100 m':'500 m'}</b>; farther = "Away".</div>`; }
+  if(qid==='q10'&&r.hhNo!==null){ /* show Q9 info */ }
+
+  const q9info = qid==='q10' ? `<div class="notice green" style="margin-bottom:12px"><b>Q9 — Household number: ${r.isInstitutional?'999 (institutional)':(r.hhNo||'auto on save')}</b> · auto-assigned (§5.1.35)</div>`:'';
+  const q16note = qid==='q16' ? `<div class="notice">Max allowed here: <b>${Math.max((parseInt(r.a.q10,10)||1)-1,0)}</b> (total persons − 1).</div>`:'';
+
+  main.innerHTML=`<div class="card">
+    ${extra}${q9info}
+    <span class="qno">Q${q.no} of 34</span>
+    <div class="qtitle">${q.title}</div>
+    ${helpBlock(qid)}
+    ${q16note}
+    ${body}
+    ${qid==='q7'?renderQ7Extras(r):''}
+  </div>`;
+  const inp=document.getElementById('in-'+qid); if(inp&&!q.opts&&!q.groups) setTimeout(()=>inp.focus(),50);
+}
+function stepCount(qid,d){
+  const q=Q[qid], inp=document.getElementById('in-'+qid);
+  let v=(parseInt(inp.value,10)||0)+d; if(v<q.min)v=q.min;
+  inp.value=v; wiz.r.a[qid]=String(v);
+}
+function renderQ7Extras(r){
+  const use=r.a.q7;
+  const needUse = use && use!=='1';
+  const ph = use==='2'?'Residence-cum-… (e.g. Residence-cum-grocery shop)': use==='0'?'Vacant-… (e.g. Vacant-under repair, Vacant-to let)':'Actual use (e.g. Kirana shop, State Bank branch, Govt. Primary School…)';
+  const canInst = use==='2';
+  return `
+  <div class="field" style="margin-top:8px"><label>Enter actual use ${use==='1'?'(disabled for pure Residence)':''}</label>
+    <input id="inUse" value="${esc(r.actualUse)}" ${use==='1'||!use?'disabled':''} placeholder="${ph}"
+      oninput="wiz.r.actualUse=this.value"></div>
+  <label class="chk ${r.isInstitutional?'on':''}" ${canInst?'':'aria-disabled="true"'} onclick="toggleInst(event)">
+    <input type="checkbox" ${r.isInstitutional?'checked':''} ${canInst?'':'disabled'} onclick="event.stopPropagation();toggleInst(event)">
+    <span><b>Is Institutional</b> — hostel, old-age home, jail, ashram… (only with code 2; asks up to Q11, household no. 999)</span></label>
+  <label class="chk ${r.isLocked?'on':''}" onclick="toggleLock(event)">
+    <input type="checkbox" ${r.isLocked?'checked':''} onclick="event.stopPropagation();toggleLock(event)">
+    <span><b>Is Locked</b> — occupants away (journey/pilgrimage…). App jumps to Mobile number; get it from neighbours if possible.</span></label>`;
+}
+function toggleInst(e){ e.preventDefault(); if(wiz.r.a.q7!=='2')return; wiz.r.isInstitutional=!wiz.r.isInstitutional; wiz.persistDraft(); views.entry(); }
+function toggleLock(e){ e.preventDefault(); wiz.r.isLocked=!wiz.r.isLocked; wiz.persistDraft(); views.entry(); }
+
+/* ---- Review & submit ---- */
+function renderReview(r){
+  assignHH(r);
+  const miss=missingSteps(r);
+  const rows=[];
+  const push=(k,v,go,missing)=>rows.push(`<div class="rv" onclick="wiz.fromReview=true;wiz.goto('${go}')">
+    <span class="k">${k}</span><span class="v ${missing?'miss':''}">${missing?'— missing —':esc(v)}</span></div>`);
+  push('Q1 · Line number', r.lineNo, 'numbers');
+  push('Q2 · Building', r.bldg||'', 'numbers', !r.bldg);
+  push('Q3 · Census house', r.ch||'', 'numbers', !r.ch);
+  push('Self-Enumeration', r.se==='yes'?('Yes — SE ID '+(r.seId||'—')):'No', 'se');
+  wiz.steps().forEach(s=>{
+    if(!Q[s]) return;
+    if(s==='q7'){
+      let v=answerLabel('q7',r)||''; if(r.actualUse)v+=' · '+r.actualUse;
+      if(r.isLocked)v+=' · LOCKED'; if(r.isInstitutional)v+=' · INSTITUTIONAL';
+      push('Q7 · Use of census house', v, 'q7', miss.includes('q7')||miss.includes('actualUse'));
+      return;
+    }
+    if(s==='q10' && (r.hhNo||r.isInstitutional)) push('Q9 · Household number (auto)', r.isInstitutional?'999':r.hhNo,'q7');
+    const lab=answerLabel(s,r);
+    const missing = miss.includes(s);
+    if(s==='q34'&&r.mobileNA){ push('Q34 · Mobile number','Not available (declared)','q34'); return; }
+    push(`Q${Q[s].no} · ${Q[s].title}`, lab||'', s, missing);
+  });
+  main.innerHTML=`<div class="card">
+    <span class="qno">REVIEW</span>
+    <div class="qtitle">Review all answers before confirming</div>
+    ${miss.length?`<div class="notice red"><b>${miss.length} item(s) missing.</b> Tap a red row to fill it. You may still save as an incomplete record.</div>`
+      :'<div class="notice green"><b>All required questions answered.</b> Confirm to save this census house (§5.1.92).</div>'}
+    ${rows.join('')}
+  </div>
+  <button class="btn accent" onclick="wiz.submit()">${miss.length?'SAVE AS INCOMPLETE':'CONFIRM & SUBMIT'}</button>`;
+}
+
+views.entryDone = function(complete){
+  $('#wiznav').classList.add('hidden'); $('#progress').classList.add('hidden');
+  const r=wiz.r;
+  const resid = ['1','2'].includes(r.a.q7) && !r.isLocked;
+  main.innerHTML=`<div class="card" style="text-align:center">
+    <div style="font-size:52px">${complete?'✅':'📝'}</div>
+    <div class="qtitle">${complete?'Census house saved':'Saved as incomplete'}</div>
+    <p class="qhint">Line ${r.lineNo} · Building ${esc(r.bldg)} · CH ${esc(r.ch)}${r.hhNo?' · Household '+r.hhNo:''}</p>
+    ${resid?`<button class="btn primary" onclick="addSiblingHH()">➕ ADD ANOTHER HOUSEHOLD — same census house</button>`:''}
+    <button class="btn accent" onclick="wiz.start()">🏠 NEXT CENSUS HOUSE</button>
+    <button class="btn ghost" onclick="ui.stack=[];ui.show('home',false)">GO TO HOME</button>
+  </div>`;
+};
+function addSiblingHH(){
+  const prev=wiz.r, r=newRecord();
+  r.bldg=prev.bldg; r.ch=prev.ch;
+  ['q4','q5','q6'].forEach(k=>{ if(prev.a[k]!==undefined) r.a[k]=prev.a[k]; });
+  r._autofilled=true;
+  wiz.open(r,true); wiz.goto('se'); wiz.dirty=true; wiz.persistDraft();
+}
+
+/* ---------------- Boot ---------------- */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+ui.show(S.settings?'home':'setup',false);
+</script>
+</body>
+</html>
