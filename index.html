@@ -201,7 +201,7 @@ footer.note{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;
    ===================================================================== */
 
 /* ---------------- Language toggle (questions & options only) ---------------- */
-let lang = localStorage.getItem('hlo_lang')||'en';
+var lang = localStorage.getItem('hlo_lang')||'en';
 function setLang(l){
   lang=l; localStorage.setItem('hlo_lang',l);
   const btn=document.getElementById('btnLang');
